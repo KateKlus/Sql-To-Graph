@@ -1,0 +1,1 @@
+select * from T1 where T1.K in (select T2.K from T2 where T2.K in (select T3.K from T3 where T3.K in (select T4.K from T4 where T4.K = 0 ))) order by T1.K;
