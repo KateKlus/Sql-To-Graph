@@ -1,13 +1,14 @@
 from graph import draw_graph
 
 # Глобальные переменные
+global graph
 graph = [('R', 'R')]
 all_keywords = ['select', '*', 'from', 'where', '(', ')', 'and', 'join', 'order', 'by', 'group', '>', '<', '=', 'in']
 global sub_queries_count
 sub_queries_count = 0
 
 # Открываем файл
-input_data = open('./input-data/sql/m1.sql', 'r')
+input_data = open('../input-data/sql/m1.sql', 'r')
 
 
 # Получаем строку из файла и подготавливаем
@@ -67,9 +68,10 @@ def analysis(query, parent='R'):
     conditions_string = get_conditions_col(query, keywords_list)
 
     # Вывод отладочной информации
-    print("Кллючевые слова: " + str(keywords_list))
-    print("Таблицы: " + str(tables_list))
-    print("Колонки: " + str(col_list))
+    print('--------------------------------------')
+    print('Кллючевые слова: ' + str(keywords_list))
+    print('Таблицы: ' + str(tables_list))
+    print('Колонки: ' + str(col_list) + '\n')
     # print("Условия: " + str(conditions_list))
 
     if keywords_list.count('in') >= 1:
@@ -89,13 +91,26 @@ def analysis(query, parent='R'):
         graph.append((node_name, parent))
         for table in tables_list:
             graph.append((node_name, table))
-        print(node_name + ' = ' + query)
+        print(node_name + ' = ' + query + '\n')
         return node_name
 
 
 # Точка входа
-query_str = get_string(input_data)
-analysis(query_str)
+def run_analysis(query_string):
+    analysis(query_string)
+    return graph
+
+
+# Очистка переменных
+def clean_tree():
+    global graph, sub_queries_count
+    graph = [('R', 'R')]
+    sub_queries_count = 0
+
+
+# query_str = get_string(input_data)
+# graph = run_analysis(query_str)
 
 # Вывод графа инормационных зависимостей
-draw_graph(graph)
+# draw_graph(graph)
+# print(graph)
