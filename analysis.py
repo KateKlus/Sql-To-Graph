@@ -1,14 +1,7 @@
-from graph import draw_graph
-
 # Глобальные переменные
-global graph
 graph = [('R', 'R')]
 all_keywords = ['select', '*', 'from', 'where', '(', ')', 'and', 'join', 'order', 'by', 'group', '>', '<', '=', 'in']
-global sub_queries_count
 sub_queries_count = 0
-
-# Открываем файл
-input_data = open('../input-data/sql/m1.sql', 'r')
 
 
 # Получаем строку из файла и подготавливаем
@@ -60,7 +53,7 @@ def get_conditions_col(query_string, keywords):
 
 
 # Анализируем строку запроса
-def analysis(query, parent='R'):
+def analysis(query, logging, parent='R'):
     global sub_queries_count
     keywords_list = get_query_keywords(query)
     tables_list = get_query_tables(query)
@@ -68,11 +61,12 @@ def analysis(query, parent='R'):
     conditions_string = get_conditions_col(query, keywords_list)
 
     # Вывод отладочной информации
-    print('--------------------------------------')
-    print('Кллючевые слова: ' + str(keywords_list))
-    print('Таблицы: ' + str(tables_list))
-    print('Колонки: ' + str(col_list) + '\n')
-    # print("Условия: " + str(conditions_list))
+    if logging:
+        print('--------------------------------------')
+        print('Кллючевые слова: ' + str(keywords_list))
+        print('Таблицы: ' + str(tables_list))
+        print('Колонки: ' + str(col_list) + '\n')
+        # print("Условия: " + str(conditions_list))
 
     if keywords_list.count('in') >= 1:
         in_start = conditions_string.find('(') + 2
@@ -81,8 +75,8 @@ def analysis(query, parent='R'):
         if in_conditions.split(' ').count('select') >= 1:
             sub_query = conditions_string[in_start: in_end]
             new_query = query[:query.find('where')] + query[query.rfind(')') + 1:]
-            node_name = analysis(new_query, parent)
-            analysis(sub_query, node_name)
+            node_name = analysis(new_query, logging, parent)
+            analysis(sub_query, logging, node_name)
 
     # Если простой запрс с одним select
     if keywords_list.count('select') == 1:
@@ -91,13 +85,14 @@ def analysis(query, parent='R'):
         graph.append((node_name, parent))
         for table in tables_list:
             graph.append((node_name, table))
-        print(node_name + ' = ' + query + '\n')
+        if logging:
+            print(node_name + ' = ' + query + '\n')
         return node_name
 
 
 # Точка входа
-def run_analysis(query_string):
-    analysis(query_string)
+def run_analysis(query_string, logging):
+    analysis(query_string, logging)
     return graph
 
 
@@ -106,11 +101,3 @@ def clean_tree():
     global graph, sub_queries_count
     graph = [('R', 'R')]
     sub_queries_count = 0
-
-
-# query_str = get_string(input_data)
-# graph = run_analysis(query_str)
-
-# Вывод графа инормационных зависимостей
-# draw_graph(graph)
-# print(graph)
