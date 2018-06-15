@@ -1,1 +1,1 @@
-select * from T1, (select * from T1 , T2 , T3 where T1.K > 0 and T2.K > 1 and T3.K > 2) where T1.K > 0 and T2.K > 1 and T3.K > 2;
+select * from T1, (select * from T2, T3, T4 where T2.K > 0 and T3.K > 1 and T4.K > 2) where T1.K > 0;

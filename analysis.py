@@ -21,11 +21,28 @@ def get_query_keywords(query_list):
     return query_keywords
 
 
+def find_sub_queries_from(query_string, tables_list=[]):
+    if query_string.find('(') != -1:
+        sub_q_start = query_string.find('(')
+        sub_q_end = query_string.find(')') + 1
+        tables_list.append(query_string[sub_q_start: sub_q_end])
+        query_string = query_string.replace(query_string[sub_q_start: sub_q_end], '')
+        find_sub_queries_from(query_string, tables_list)
+    return tables_list
+
+
+# TODO изменить логику: определять по закрывающей скобке а не по последнему where
 # Получаем список таблиц запроса
 def get_query_tables(query_string):
+    tables_list = []
     from_i = query_string.find('from') + 5
     where_i = query_string.find('where') - 1
     order_i = query_string.find('order') - 1
+    if query_string[from_i:where_i].find('(') != -1:
+        tables_list = find_sub_queries_from(query_string[from_i:])
+        for table in tables_list:
+            query_string = query_string.replace(table, '')
+            where_i = query_string.find('where') - 1
     if where_i == -2:
         if order_i == -2:
             tables_string = query_string[from_i:]
@@ -33,7 +50,9 @@ def get_query_tables(query_string):
             tables_string = query_string[from_i:order_i]
     else:
         tables_string = query_string[from_i:where_i]
-    return tables_string.split(', ')
+    tables = tables_string.strip().split(', ')
+    tables_list = tables_list + tables
+    return tables_list
 
 
 # Получаем список колонок
@@ -66,7 +85,7 @@ def analysis(query, logging, parent='R'):
         print('Кллючевые слова: ' + str(keywords_list))
         print('Таблицы: ' + str(tables_list))
         print('Колонки: ' + str(col_list) + '\n')
-        # print("Условия: " + str(conditions_list))
+        print("Условия: " + str(conditions_string))
 
     if keywords_list.count('in') >= 1:
         in_start = conditions_string.find('(') + 2
@@ -77,6 +96,13 @@ def analysis(query, logging, parent='R'):
             new_query = query[:query.find('where')] + query[query.rfind(')') + 1:]
             node_name = analysis(new_query, logging, parent)
             analysis(sub_query, logging, node_name)
+
+    for table in tables_list:
+        # Анализируем ключевое слово in
+        if table.find('select') != -1:
+            new_query = query.replace(table, '').replace('  ', ' ')
+            node_name = analysis(new_query, logging, parent)
+            analysis(table.replace('(', '').replace(')', '').replace('  ', ' '), logging, node_name)
 
     # Если простой запрс с одним select
     if keywords_list.count('select') == 1:
