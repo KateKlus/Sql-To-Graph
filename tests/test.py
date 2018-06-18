@@ -4,6 +4,7 @@ from difflib import ndiff
 sql = open('./done_sql.sql', 'r')
 graphs_expect = open('./done_graph.txt', 'r')
 graphs_actual = open('./actual_graphs.txt', 'a')
+count = 0
 
 
 def run_tests():
