@@ -9,8 +9,10 @@ count = 0
 
 def run_tests():
     for line in sql:
+        global count
+        count += 1
         line = line.strip().replace('(', ' ( ').replace(')', ' ) ').replace('  ', ' ').replace(';', '')
-        actual_graph = run_analysis(line, True)
+        actual_graph = run_analysis(line, False)
         graphs_actual.write(str(actual_graph) + '\n')
         clean_tree()
 
@@ -22,10 +24,12 @@ def clean_output_file():
 
 
 def compare_results():
+    global count
     t1 = graphs_expect.read().splitlines()
     t2 = open('./actual_graphs.txt').read().splitlines()
     if t1 == t2:
         print("Success")
+        print("Total count: " + str(count))
     else:
         print("Failed")
         print(''.join(ndiff(t1, t2)))
