@@ -1,3 +1,5 @@
+import gc
+
 # Глобальные переменные
 graph = [('R', 'R')]
 all_keywords = ['select', '*', 'from', 'where', '(', ')', 'and', 'join', 'order', 'by', 'group', '>', '<', '=', 'in']
@@ -40,7 +42,7 @@ def get_query_tables(query_string):
     where_i = query_string.find('where') - 1
     order_i = query_string.find('order') - 1
     if query_string[from_i:where_i].find('(') != -1:
-        tables_list = find_sub_queries_from(query_string[from_i:])
+        tables_list = find_sub_queries_from(query_string[from_i:], [])
         for table in tables_list:
             query_string = query_string.replace(table, '')
     where_i = query_string.find('where') - 1
@@ -146,6 +148,7 @@ def run_analysis(query_string, logging):
 
 # Очистка переменных
 def clean_tree():
+    gc.collect()
     global graph, sub_queries_count
     graph = [('R', 'R')]
     sub_queries_count = 0

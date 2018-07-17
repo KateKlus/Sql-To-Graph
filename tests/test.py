@@ -11,8 +11,9 @@ def run_tests():
     for line in sql:
         global count
         count += 1
+        print("Обработка выражения №" + str(count))
         line = line.strip().replace('(', ' ( ').replace(')', ' ) ').replace('  ', ' ').replace(';', '')
-        actual_graph = run_analysis(line, False)
+        actual_graph = run_analysis(line, True)
         graphs_actual.write(str(actual_graph) + '\n')
         clean_tree()
 

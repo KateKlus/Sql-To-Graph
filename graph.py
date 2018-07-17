@@ -7,7 +7,7 @@ def draw_graph(graph, graph_layout='spring',
                node_text_size=12, edge_alpha=0.3, edge_tickness=1,
                text_font='sans-serif'):
 
-    # Создаем граф
+    # Создаем граф')', 'and', 'join', 'order', 'by', 'group', '>', '<', '=', 'in']
     g = nx.Graph()
 
     # Добавляем соединительные линии
