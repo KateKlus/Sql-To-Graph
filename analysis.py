@@ -1,8 +1,9 @@
-import gc
+import gc,re
 
 # Глобальные переменные
 graph = [('R', 'R')]
-all_keywords = ['select', '*', 'from', 'where', '(', ')', 'and', 'join', 'order', 'by', 'group', '>', '<', '=', 'in']
+all_keywords = ['select', '*', 'from', 'where', '(', ')', 'and', 'join', 'inner', 'outer', 'left', 'right', 'on',
+                'order', 'by', 'group', '>', '<', '=', 'in']
 sub_queries_count = 0
 
 
@@ -126,6 +127,33 @@ def analysis(query, logging, parent='R'):
             tables_list.remove(table)
             node_name = analysis(new_query, logging, parent)
             analysis(table.replace('(', '').replace(')', '').replace('  ', ' '), logging, node_name)
+
+        # Анализируем ключевое слово join
+        if keywords_list.count('join') >= 1:
+            temp_table = table
+            count = table.count('join')
+            if keywords_list.count('inner') > 0:
+                temp_table = temp_table.replace('inner', '')
+                keywords_list.remove('inner')
+            elif keywords_list.count('outer') > 0 or keywords_list.count('left') > 0 or keywords_list.count('right') > 0:
+                temp_table = temp_table.replace('outer', '')
+                temp_table = temp_table.replace('left', '')
+                temp_table = temp_table.replace('right', '')
+            for i in range(count):
+                keywords_list.remove('join')
+                keywords_list.remove('on')
+                on_i = temp_table.find('on')
+                join_i = temp_table.find('join', temp_table.find('join')+4,)
+                temp_table = temp_table.replace(temp_table[on_i:join_i], '')
+                tt = temp_table.split(' ')
+                tt.remove('join')
+                temp_table = ' '.join(tt)
+
+            temp_table = temp_table.replace('join', '')
+            tables_list.remove(table)
+            on_i = temp_table.find('on')
+            temp_table = re.sub(r'\s+', ' ', temp_table[:on_i]).strip()
+            tables_list.extend(temp_table.split(' '))
 
     # Если простой запрс с одним select
     if keywords_list.count('select') == 1:
