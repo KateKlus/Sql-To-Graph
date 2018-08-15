@@ -1,4 +1,5 @@
-import gc,re
+import gc
+import re
 
 # Глобальные переменные
 graph = [('R', 'R')]
