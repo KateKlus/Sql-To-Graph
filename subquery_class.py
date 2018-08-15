@@ -19,6 +19,12 @@ class Subquery:
         print('Колонки: ' + str(self.columns))
         print("Условия: " + str(self.conditions) + '\n')
 
+    def print_pre_info(self):
+        print('--------------------------------------')
+        print('Узел: ' + self.node_name)
+        print('Запрос: ' + self.full_str)
+        print('Ключевые слова: ' + str(self.keywords))
+
     # Определяем уровень вложенности скобок
     def get_brackets_levels(self):
         current_level = 0
@@ -65,6 +71,7 @@ class Subquery:
                     sub_query_str = query_string[start_i:end_i].strip()
                     sub_queries_count += 1
                     self.conditions = conditions.replace('( ' + sub_query_str + ' )', 's' + str(sub_queries_count))
+                    self.full_str = query_string.replace('( ' + sub_query_str + ' )', 's' + str(sub_queries_count))
                     sub_query = Subquery(sub_query_str, 's' + str(sub_queries_count), self.node_name)
                     graph.add_node(sub_query.node_name, sub_query.parent_node, sub_query.tables)
 
@@ -134,7 +141,7 @@ class Subquery:
                     end_i = i[1] - 1
                     sub_query_str = query_string[start_i:end_i].strip()
                     sub_queries_count += 1
-                    new_query = Subquery(query_string.replace('( ' + sub_query_str + ' )', 's' + str(sub_queries_count)),
+                    new_query = Subquery(query_string.replace(', ( ' + sub_query_str + ' )', ''),
                                          's' + str(sub_queries_count), self.node_name)
                     graph.add_node(new_query.node_name, new_query.parent_node, new_query.tables)
 
@@ -151,6 +158,7 @@ class Subquery:
         self.node_name = node_name
         self.parent_node = parent_node
         self.keywords = self.get_keywords()
+        self.print_pre_info()
         if self.keywords.count('(') > 0:
             self.brackets_levels = self.get_brackets_levels()
         else:
