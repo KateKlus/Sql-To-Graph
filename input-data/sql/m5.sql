@@ -1,0 +1,1 @@
+select t1 from ( select t1 from ( select t1 from T1 ), ( select t1 from T2 ) ) where t1 in ( select t1 from ( select t1 from T4 ) union ( select t1 from T5 ) )

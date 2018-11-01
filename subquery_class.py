@@ -35,24 +35,39 @@ class Subquery:
     # Определяем уровень вложенности скобок
     def get_brackets_levels(self):
         current_level = 0
+        previous_levels = []
         current_position = 0
         brackets_levels = {}
         query = self.full_str
-        for word in query:
+        for symbol in query:
             current_position += 1
-            if word == '(':
-                current_level += 1
+            if symbol == '(':
+                current_level += 10
                 if brackets_levels.get(current_level) is None:
                     brackets_levels.update({current_level: [current_position, 0]})
+                    previous_levels.append(current_level)
                 else:
                     current_level += 1
+                    previous_levels.append(current_level)
                     brackets_levels.update({current_level: [current_position, 0]})
-            if word == ')':
-                bracket_indexes = brackets_levels.get(current_level)
-                new_indexes = [bracket_indexes[0], current_position]
-                brackets_levels.update({current_level: new_indexes})
-                current_level -= 1
-
+            if symbol == ')':
+                if brackets_levels.get(current_level)[1] == 0:
+                    bracket_indexes = brackets_levels.get(current_level)
+                    new_indexes = [bracket_indexes[0], current_position]
+                    brackets_levels.update({current_level: new_indexes})
+                else:
+                    if current_level % 10 != 0:
+                        current_level -= current_level % 10
+                    else:
+                        current_level -= 10
+                    bracket_indexes = brackets_levels.get(current_level)
+                    new_indexes = [bracket_indexes[0], current_position]
+                    brackets_levels.update({current_level: new_indexes})
+                previous_levels.reverse()
+                for level in previous_levels:
+                    if brackets_levels.get(level)[1] == 0:
+                        current_level = level
+                previous_levels.reverse()
         return brackets_levels
 
     # Получаем список колонок
@@ -78,8 +93,8 @@ class Subquery:
                     self.sub_queries_count += 1
                     self.conditions = conditions.replace('( ' + sub_query_str + ' )', 's' + str(self.sub_queries_count))
                     self.full_str = query_string.replace('( ' + sub_query_str + ' )', 's' + str(self.sub_queries_count))
-                    sub_query = Subquery(sub_query_str, 's' + str(self.sub_queries_count), self.node_name, self.graph,
-                                         self.sub_queries_count)
+                    Subquery(sub_query_str, 's' + str(self.sub_queries_count), self.node_name, self.graph,
+                             self.sub_queries_count)
 
     # Получаем список условий
     def get_conditions(self):
@@ -145,11 +160,11 @@ class Subquery:
                 if start_i == i[0]:
                     end_i = i[1] - 1
                     sub_query_str = query_string[start_i:end_i].strip()
-                    self.set_new_full_str(query_string.replace('( ' + sub_query_str + ' )',
-                                                               's' + str(self.sub_queries_count + 1)))
                     self.sub_queries_count += 1
-                    sub_query = Subquery(sub_query_str, 's' + str(self.sub_queries_count), self.node_name, self.graph,
-                                         self.sub_queries_count)
+                    self.set_new_full_str(query_string.replace('( ' + sub_query_str + ' )',
+                                                               's' + str(self.sub_queries_count)))
+                    Subquery(sub_query_str, 's' + str(self.sub_queries_count), self.node_name, self.graph,
+                             self.sub_queries_count)
                     return self.tables
         else:
             tables_list = tables_string.strip().split(', ')
@@ -165,15 +180,15 @@ class Subquery:
             if sub_query_str_right.count('select') > 0:
                 new_query_str = 's' + str(self.sub_queries_count + 1) + new_query_str
                 self.sub_queries_count += 1
-                sub_query_right = Subquery(sub_query_str_right, 's' + str(self.sub_queries_count), self.node_name,
-                                           self.graph, self.sub_queries_count)
+                Subquery(sub_query_str_right, 's' + str(self.sub_queries_count), self.node_name, self.graph,
+                         self.sub_queries_count)
             else:
                 new_query_str = sub_query_str_right + ' union '
             if sub_query_str_left.count('select') > 0:
                 new_query_str = new_query_str + 's' + str(self.sub_queries_count + 1)
                 self.sub_queries_count += 1
-                sub_query_str_left = Subquery(sub_query_str_left, 's' + str(self.sub_queries_count), self.node_name,
-                                              self.graph, self.sub_queries_count)
+                Subquery(sub_query_str_left, 's' + str(self.sub_queries_count), self.node_name, self.graph,
+                         self.sub_queries_count)
             else:
                 new_query_str = ' union ' + sub_query_str_left
             self.set_new_full_str(new_query_str)

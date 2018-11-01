@@ -1,4 +1,3 @@
-import gc
 from graph_class import Graph
 from graph import draw_graph
 from subquery_class import Subquery
@@ -7,13 +6,13 @@ from subquery_class import Subquery
 # Получаем строку из файла и подготавливаем
 def get_string(string):
     for line in string:
-        line = line.strip().replace('(', ' ( ').replace(')', ' ) ').replace('  ', ' ').replace(';', '')
+        line = line.strip().replace('(', ' ( ').replace(')', ' ) ').replace('  ', ' ').replace('  ', ' ').replace(';', '')
         print(line)
         return line
 
 
 # Открываем файл
-input_data = open('../input-data/sql/d1.sql', 'r')
+input_data = open('../input-data/sql/m5.sql', 'r')
 # Получаем строку запроса
 query_str = get_string(input_data)
 # Инициируем граф
