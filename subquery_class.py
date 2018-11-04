@@ -1,6 +1,7 @@
 all_keywords = ['select', 'from', 'where', '(', ')', 'and', 'join', 'inner', 'outer', 'left', 'right', 'distinct',
                 'unique', 'all', 'cross', 'natural', 'full', 'using', 'having', 'on', 'union', 'intersect', 'minus',
                 'order', 'by', 'group', '>', '<', '=', 'in', 'asc', 'desc', 'nulls', 'first', 'last']
+max_sub_queries_num = 1
 
 
 class Subquery:
@@ -8,16 +9,20 @@ class Subquery:
         print('--------------------------------------')
         print('Узел: ' + self.node_name)
         print('Запрос: ' + self.full_str)
-        print('Ключевые слова: ' + str(self.keywords))
+        #print('Ключевые слова: ' + str(self.keywords))
         print('Таблицы: ' + str(self.tables))
         print('Колонки: ' + str(self.columns))
         print("Условия: " + str(self.conditions) + '\n')
 
     def print_pre_info(self):
+        global max_sub_queries_num
         print('--------------------------------------')
         print('Узел: ' + self.node_name)
+        print('Родитель: ' + self.parent_node)
         print('Запрос: ' + self.full_str)
-        print('Ключевые слова: ' + str(self.keywords))
+        print('sub_query_count: ' + str(self.sub_queries_count))
+        print('max_sub_queries_num: ' + str(max_sub_queries_num))
+        #print('Ключевые слова: ' + str(self.keywords))
 
     # Переопределяем строку запроса после замены подзапросов их именами
     def set_new_full_str(self, new_str):
@@ -79,6 +84,7 @@ class Subquery:
 
     # Содержат ли "условия" подзапросы
     def analyse_conditions(self):
+        global max_sub_queries_num
         conditions = self.conditions
         brackets_levels = self.brackets_levels
         query_string = self.full_str
@@ -91,10 +97,11 @@ class Subquery:
                     end_i = i[1] - 1
                     sub_query_str = query_string[start_i:end_i].strip()
                     self.sub_queries_count += 1
-                    self.conditions = conditions.replace('( ' + sub_query_str + ' )', 's' + str(self.sub_queries_count))
-                    self.full_str = query_string.replace('( ' + sub_query_str + ' )', 's' + str(self.sub_queries_count))
-                    Subquery(sub_query_str, 's' + str(self.sub_queries_count), self.node_name, self.graph,
-                             self.sub_queries_count)
+                    max_sub_queries_num += 1
+                    #self.conditions = conditions.replace('( ' + sub_query_str + ' )', 's' + str(max_sub_queries_num))
+                    Subquery(sub_query_str, 's' + str(max_sub_queries_num), self.node_name, self.graph,
+                             max_sub_queries_num)
+                    self.full_str = query_string.replace('( ' + sub_query_str + ' )', 's' + str(max_sub_queries_num))
 
     # Получаем список условий
     def get_conditions(self):
@@ -128,7 +135,7 @@ class Subquery:
 
     # Получаем список таблиц запроса
     def get_tables(self):
-        global tables_list
+        global tables_list, max_sub_queries_num
         tables_list = []
         keywords = self.keywords
         query_string = self.full_str
@@ -161,36 +168,43 @@ class Subquery:
                     end_i = i[1] - 1
                     sub_query_str = query_string[start_i:end_i].strip()
                     self.sub_queries_count += 1
+                    max_sub_queries_num += 1
+                    new_subquery = Subquery(sub_query_str, 's' + str(self.sub_queries_count), self.node_name, self.graph,
+                             self.sub_queries_count)
+
                     self.set_new_full_str(query_string.replace('( ' + sub_query_str + ' )',
                                                                's' + str(self.sub_queries_count)))
-                    Subquery(sub_query_str, 's' + str(self.sub_queries_count), self.node_name, self.graph,
-                             self.sub_queries_count)
+                    #self.sub_queries_count = new_subquery.sub_queries_count+1
                     return self.tables
         else:
             tables_list = tables_string.strip().split(', ')
             return tables_list
 
     def check_for_union(self):
+        global max_sub_queries_num
         query_string = self.full_str
+        self.keywords = self.get_keywords()
         if self.keywords.count('union') > 0:
             start_i = query_string.find('union') + 5
-            sub_query_str_left = query_string[start_i:].strip()
-            sub_query_str_right = query_string[:start_i - 5].strip()
+            sub_query_str_right = query_string[start_i:].strip()
+            sub_query_str_left = query_string[:start_i - 5].strip()
             new_query_str = ' union '
             if sub_query_str_right.count('select') > 0:
-                new_query_str = 's' + str(self.sub_queries_count + 1) + new_query_str
+                new_query_str = new_query_str + 's' + str(self.sub_queries_count + 1)
                 self.sub_queries_count += 1
+                max_sub_queries_num += 1
                 Subquery(sub_query_str_right, 's' + str(self.sub_queries_count), self.node_name, self.graph,
                          self.sub_queries_count)
             else:
-                new_query_str = sub_query_str_right + ' union '
+                new_query_str = ' union ' + sub_query_str_right
             if sub_query_str_left.count('select') > 0:
-                new_query_str = new_query_str + 's' + str(self.sub_queries_count + 1)
+                new_query_str = 's' + str(self.sub_queries_count + 1) + new_query_str
                 self.sub_queries_count += 1
+                max_sub_queries_num += 1
                 Subquery(sub_query_str_left, 's' + str(self.sub_queries_count), self.node_name, self.graph,
                          self.sub_queries_count)
             else:
-                new_query_str = ' union ' + sub_query_str_left
+                new_query_str = sub_query_str_left + new_query_str
             self.set_new_full_str(new_query_str)
 
     def __init__(self, full_str, node_name, parent_node, graph, sub_queries_count=1):
@@ -208,7 +222,7 @@ class Subquery:
         self.tables = self.get_tables()
         self.conditions = self.get_conditions()
         self.columns = self.get_columns()
-        self.check_for_union()
         self.analyse_conditions()
+        self.check_for_union()
         self.print_info()
         graph.add_node(self.node_name, self.parent_node, self.tables)
