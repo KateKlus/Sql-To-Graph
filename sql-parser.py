@@ -68,13 +68,3 @@ def sql_to_graph(query_string):
 input_data = open('./input-data/sql/m5.sql', 'r')
 query_str = get_string(input_data)
 sql_to_graph(query_str)
-
-
-
-
-
-
-
-
-
-
