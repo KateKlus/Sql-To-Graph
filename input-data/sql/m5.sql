@@ -1,1 +1,1 @@
-select t1 from ( select t1 from ( select t1 from T1 ), ( select t1 from T2 ) ) where t1 in ( select t1 from ( select t1 from T4 ) union ( select t1 from T5 ) )
+select table2.a2, table2.b2, table2.c2 from table2, (select w1.a2, w1.b2 from (select a2, b2 from table2 where c2 >= all (select b5 from table5)) as w1, (select a2, b2 from table2 where b2 not in (select b3 from table3)) as w2 where w1.a2 = w2.a2 and w1.b2 = w2.b2) as w where table2.a2 = w.a2 and table2.b2 = w.b2;

@@ -12,7 +12,7 @@ def get_string(string):
 
 
 # Открываем файл
-input_data = open('../input-data/sql/m5.sql', 'r')
+input_data = open('./input-data/sql/m4.sql', 'r')
 # Получаем строку запроса
 query_str = get_string(input_data)
 # Инициируем граф

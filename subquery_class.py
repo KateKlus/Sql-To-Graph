@@ -98,10 +98,11 @@ class Subquery:
                     sub_query_str = query_string[start_i:end_i].strip()
                     self.sub_queries_count += 1
                     max_sub_queries_num += 1
-                    #self.conditions = conditions.replace('( ' + sub_query_str + ' )', 's' + str(max_sub_queries_num))
+                    self.set_new_full_str(
+                        query_string.replace('( ' + sub_query_str + ' )', 's' + str(max_sub_queries_num)))
                     Subquery(sub_query_str, 's' + str(max_sub_queries_num), self.node_name, self.graph,
                              max_sub_queries_num)
-                    self.full_str = query_string.replace('( ' + sub_query_str + ' )', 's' + str(max_sub_queries_num))
+
 
     # Получаем список условий
     def get_conditions(self):
@@ -169,8 +170,8 @@ class Subquery:
                     sub_query_str = query_string[start_i:end_i].strip()
                     self.sub_queries_count += 1
                     max_sub_queries_num += 1
-                    new_subquery = Subquery(sub_query_str, 's' + str(self.sub_queries_count), self.node_name, self.graph,
-                             self.sub_queries_count)
+                    new_subquery = Subquery(sub_query_str, 's' + str(self.sub_queries_count), self.node_name,
+                                            self.graph, self.sub_queries_count)
 
                     self.set_new_full_str(query_string.replace('( ' + sub_query_str + ' )',
                                                                's' + str(self.sub_queries_count)))
@@ -193,15 +194,15 @@ class Subquery:
                 new_query_str = new_query_str + 's' + str(self.sub_queries_count + 1)
                 self.sub_queries_count += 1
                 max_sub_queries_num += 1
-                Subquery(sub_query_str_right, 's' + str(self.sub_queries_count), self.node_name, self.graph,
-                         self.sub_queries_count)
+                Subquery(sub_query_str_right, 's' + str(max_sub_queries_num), self.node_name, self.graph,
+                         max_sub_queries_num)
             else:
                 new_query_str = ' union ' + sub_query_str_right
             if sub_query_str_left.count('select') > 0:
-                new_query_str = 's' + str(self.sub_queries_count + 1) + new_query_str
+                new_query_str = 's' + str(max_sub_queries_num + 1) + new_query_str
                 self.sub_queries_count += 1
                 max_sub_queries_num += 1
-                Subquery(sub_query_str_left, 's' + str(self.sub_queries_count), self.node_name, self.graph,
+                Subquery(sub_query_str_left, 's' + str(max_sub_queries_num), self.node_name, self.graph,
                          self.sub_queries_count)
             else:
                 new_query_str = sub_query_str_left + new_query_str
@@ -224,5 +225,6 @@ class Subquery:
         self.columns = self.get_columns()
         self.analyse_conditions()
         self.check_for_union()
+
         self.print_info()
         graph.add_node(self.node_name, self.parent_node, self.tables)
