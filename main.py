@@ -1,5 +1,5 @@
-import sys
-from analysis import *
+import sys, re
+from analysis_v2 import *
 from PyQt5 import QtWidgets, QtGui, QtCore, QtSvg
 from gui.design import Ui_MainWindow
 
@@ -11,11 +11,17 @@ class ExampleApp(QtWidgets.QMainWindow, Ui_MainWindow):
         self.buildButton.clicked.connect(self.sql_to_graph)
 
     def sql_to_graph(self):
-        input_sql = self.inputBox.toPlainText()
-        sql_graph = sql_to_graph(input_sql)
+        sql = self.inputBox.toPlainText()
+
+        # Prepare string
+        sql = sql.lower()
+        sql = re.sub(r"\n+", " ", sql)
+        sql = re.sub(r"\t+", " ", sql)
+        sql = re.sub(r"\s+", " ", sql)
+
+        sql_graph = sql_to_graph(sql)
         self.outputBox.setText(sql_graph[0])
-        adjacency_list = b_graph_to_adjacency_list(sql_graph[1])
-        draw_graph(adjacency_list)
+        draw_graph(sql_graph[1])
         self.horizontalLayout.removeWidget(self.svgWidget)
         self.svgWidget = QtSvg.QSvgWidget('graph_gd.svg')
         self.svgWidget.setMinimumSize(QtCore.QSize(500, 0))
