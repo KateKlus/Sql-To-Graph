@@ -1,14 +1,17 @@
-import re
+import re as reg
 import string
 import networkx as nx
 from graphviz import Digraph
 
 alphabet = list(string.ascii_uppercase)
+keywords = ['union', 'minus', 'intersect', 'union_all']
+
 
 result_tree = []
 tree = []
 part = []
 graph = {'R': []}
+
 
 class Part:
     def __init__(self, sql_query="", presence_of_brackets=False):
@@ -41,6 +44,9 @@ class Node:
 
     def set_body(self, body):
         self.body = body
+
+    def set_name(self, name):
+        self.name = name
 
 
 class BracketPosition:
@@ -90,9 +96,9 @@ def parents_separator():
     parser_string = '(.*)(union|intersect|union_all|minus)(.*)'
     sql_str = sql_str.replace("union all", "union_all")
     print(sql_str)
-    if re.match(parser_string, sql_str) is not None:
-        res1 = re.match(parser_string, sql_str).group(1)
-        res2 = re.match(parser_string, sql_str).group(3)
+    if reg.match(parser_string, sql_str) is not None:
+        res1 = reg.match(parser_string, sql_str).group(1)
+        res2 = reg.match(parser_string, sql_str).group(3)
 
         num = 0
         repeat_child_index = 0
@@ -100,8 +106,8 @@ def parents_separator():
         flag = "chi_ldren"
         for x in range(0, len(part)):
             if part[x].get_presence_of_brackets() is True:
-                if re.match("(.*)chi_ldren(.*)", res1) is not None:
-                    children_count = re.findall(flag, res1)
+                if reg.match("(.*)chi_ldren(.*)", res1) is not None:
+                    children_count = reg.findall(flag, res1)
                     repeat_child_index += len(children_count)
                     for i in range(0, len(children_count)):
                         if repeat_child_index > 1:
@@ -110,7 +116,7 @@ def parents_separator():
                             res1 = res1.replace("chi_ldren" + str(num), part[x].get_sql_query())
                         num += 1
                 else:
-                    children_count = re.findall(flag, res2)
+                    children_count = reg.findall(flag, res2)
                     repeat_child_index1 += len(children_count)
                     for i in range(0, len(children_count)):
                         if repeat_child_index1 > 1:
@@ -121,7 +127,7 @@ def parents_separator():
 
         tree.append(Node(tree[0].get_name() + "A", res1))
         tree.append(Node(tree[0].get_name() + "B", res2))
-        temp_sql = "(" + tree[-2].get_name() + ") " + re.match(parser_string, sql_str).group(2) + " (" + tree[-1].get_name() + ")"
+        temp_sql = "(" + tree[-2].get_name() + ") " + reg.match(parser_string, sql_str).group(2) + " (" + tree[-1].get_name() + ")"
         result_tree.append(Node(tree[0].get_name(), temp_sql))
     else:
         parent = ""
@@ -167,7 +173,7 @@ def parse(sql_string, CBP):
 
     # Убираем лишнее
     for x in range(0, len(part)):
-        match = re.match("(.*)select(.*)", part[x].get_sql_query())
+        match = reg.match("(.*)select(.*)", part[x].get_sql_query())
         if part[x].get_presence_of_brackets() is True and match is None:
             part[x].set_presence_of_brackets(False)
             part[x].set_sql_query("(" + part[x].get_sql_query() + ")")
@@ -188,6 +194,10 @@ def parse(sql_string, CBP):
 
 def sql_to_graph(query_string):
     global tree, result_tree, part
+    tree = []
+    result_tree.clear()
+    part.clear()
+
     tree.append(Node(alphabet[0], query_string))
     CBP = children_bracket_position(tree[0].get_body())
     parse(tree[0].get_body(), CBP)
@@ -208,11 +218,27 @@ def sql_to_graph(query_string):
     for i in result_tree:
         print(i.get_name() + "\t" + i.get_body())
 
+    rename_nodes()
+
     build_graph()
     print("\n=============")
     print(graph)
     tree = tree_to_txt()
     return [tree, graph]
+
+
+def rename_nodes():
+    num = 1
+    for x in result_tree:
+        name = x.get_name()
+        for y in result_tree:
+            body = y.get_body()
+            if body.find("(" + name + ")") != -1:
+                new_body = body.replace("(" + name + ")", "(N"+str(num)+")")
+                y.set_body(new_body)
+        new_name = "N"+str(num)
+        x.set_name(new_name)
+        num += 1
 
 
 def remove_duplicates():
@@ -315,36 +341,72 @@ def build_graph():
         for w in words:
             if w.startswith('(') and w.endswith(')'):
                 child_nodes = graph.get(x.get_name())
-                child_nodes.append(w[1:-1])
-    for n in graph.keys():
-        if len(graph[n]) == 0:
-            for x in result_tree:
-                if x.get_name() == n:
-                    sql = x.get_body()
-                    sql = sql.replace(',', '')
-                    tables = []
-                    if sql.find('where') == -1:
-                        ind = sql.find('from') + 4
-                        tables.extend(sql[ind: len(sql)].split(' '))
-                    else:
-                        tables.extend(sql[sql.find('from') + 4: sql.find('where')].split(' '))
-                    for t in tables:
-                        if t == '':
-                            tables.remove(t)
-                    graph.update({n: tables})
+                if child_nodes.count(w[1:-1]) == 0:
+                    child_nodes.append(w[1:-1])
+
+    for x in result_tree:
+        sql = x.get_body()
+        sql = sql.replace(',', '')
+        tables = []
+        if sql.find('where') == -1:
+            sub_str = sql[sql.find('from') + 4: len(sql)]
+            tables.extend(sub_str.split(' '))
+        else:
+            sub_str = sql[sql.find('from') + 4: sql.find('where')]
+            tables.extend(sub_str.split(' '))
+
+        # Уберем пустые элементы
+        tab = []
+        for t in tables:
+            if t != '':
+                tab.append(t)
+
+        # Избавимся от конструкций as
+        global i
+        i = len(tab) - 1
+        while i > -1:
+            if tab[i] == 'as':
+                tab.pop(i + 1)
+                tab.pop(i)
+                tab.pop(i - 1)
+                i -= 2
+            i -= 1
+
+        # Избавимся от узлов типа (...) и ключевых слов
+        t_i = len(tab) - 1
+        while t_i > -1:
+            if tab[t_i].startswith('(') or tab[t_i].endswith(')') or keywords.count(tab[t_i]) != 0:
+                tab.pop(t_i)
+            t_i -= 1
+
+        nodes = graph.get(x.get_name())
+        nodes.extend(tab)
+        graph.update({x.get_name(): nodes})
 
 
 def draw_graph(adjacency_list):
     u = Digraph(format='pdf')
-    u.attr(size='6,6')
-    u.node_attr.update(color='lightblue2', style='filled')
-
     g = nx.MultiDiGraph()
+
     g.add_nodes_from(adjacency_list.keys())
+
+    #color_map = []
+
     for k, v in adjacency_list.items():
         for i in v:
             if k != i:
                 u.edge(str(k), str(i))
+
+    # for node in g:
+    #     res = reg.match('N[0..9]*', node)
+    #     if res is not None:
+    #         u.get_node(node).attr['color'] = 'blue'
+    #     else:
+    #         u.get_node(node).attr['color'] = 'green'
+
+    #nx.set_node_attributes(g, color_map, 'node_color')
+    u.attr(size='6,6')
+    u.node_attr.update(style='filled', color='lightblue2')
 
     u.render(format='pdf', filename='graph')
     u.render(format='png', filename='graph_cairo')
@@ -366,6 +428,6 @@ def tree_to_txt():
 # children_bracket_position(query)
 #
 # # sql = 'select * from table2 where field1 = value2)'
-# # a = re.match('(.*)select(.*)', sql)
+# # a = reg.match('(.*)select(.*)', sql)
 # # print(a)
 #sql_to_graph(query4.lower())
