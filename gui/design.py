@@ -37,7 +37,7 @@ class Ui_MainWindow(object):
         # self.label.setObjectName("label")
         # self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.inputBox.setStyleSheet("QLineEdit { background-color : white; }")
-        self.svgWidget = QtSvg.QSvgWidget('')
+        self.svgWidget = QtSvg.QSvgWidget()
         self.horizontalLayout.addWidget(self.svgWidget)
 
         self.verticalLayout.addLayout(self.horizontalLayout)
