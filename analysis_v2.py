@@ -125,8 +125,8 @@ def parents_separator():
                             res2 = res2.replace("chi_ldren" + str(num), part[x].get_sql_query())
                         num += 1
 
-        tree.append(Node(tree[0].get_name() + "A", res1))
-        tree.append(Node(tree[0].get_name() + "B", res2))
+        tree.append(Node(tree[0].get_name() + "A", res2))
+        tree.append(Node(tree[0].get_name() + "B", res1))
         temp_sql = "(" + tree[-2].get_name() + ") " + reg.match(parser_string, sql_str).group(2) + " (" + tree[-1].get_name() + ")"
         result_tree.append(Node(tree[0].get_name(), temp_sql))
     else:
