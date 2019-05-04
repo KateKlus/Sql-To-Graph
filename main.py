@@ -1,8 +1,10 @@
-import sys, re, os
+import sys
+import re
+import os
 from analysis_v2 import *
 from PyQt5 import QtWidgets, QtGui, QtCore, QtSvg, QtXml
 from gui.design import Ui_MainWindow
-from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFileDialog
+from QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFileDialog
 from shutil import copyfile
 
 
