@@ -1,4 +1,4 @@
-# sql-to-graph
+# Sql-To-Graph
 The script presents sql-queries as an information dependency graphs.
 
 Dependencies:
