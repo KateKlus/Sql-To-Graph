@@ -1,16 +1,17 @@
+# -*- coding: utf-8 -*-
 import sys
 import re
 import os
 from analysis_v2 import *
 from PyQt5 import QtWidgets, QtGui, QtCore, QtSvg, QtXml
 from gui.design import Ui_MainWindow
-from QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFileDialog
+from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFileDialog
 from shutil import copyfile
 
 
-class ExampleApp(QtWidgets.QMainWindow, Ui_MainWindow):
+class main_window(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
-        super(ExampleApp, self).__init__(parent=parent)
+        super(main_window, self).__init__(parent=parent)
         self.setupUi(self)
         self.buildButton.clicked.connect(self.sql_to_graph)
         self.cleanButton.clicked.connect(self.clean)
@@ -19,6 +20,7 @@ class ExampleApp(QtWidgets.QMainWindow, Ui_MainWindow):
         sql_graph = ""
 
     def sql_to_graph(self):
+        clean()
         global sql_graph
         sql = self.inputBox.toPlainText()
 
@@ -63,7 +65,7 @@ class ExampleApp(QtWidgets.QMainWindow, Ui_MainWindow):
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
-    window = ExampleApp()
+    window = main_window()
     window.show()
     app.exec_()
 

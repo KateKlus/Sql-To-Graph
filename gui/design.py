@@ -1,11 +1,4 @@
 # -*- coding: utf-8 -*-
-
-# Form implementation generated from reading ui file 'main.ui'
-#
-# Created by: PyQt5 UI code generator 5.12
-#
-# WARNING! All changes made in this file will be lost!
-
 from PyQt5 import QtCore, QtGui, QtWidgets, QtSvg
 
 
@@ -31,11 +24,6 @@ class Ui_MainWindow(object):
         self.outputBox.setObjectName("outputBox")
         self.horizontalLayout.addWidget(self.outputBox)
 
-        # self.label = QtWidgets.QLabel(self.centralwidget)
-        # self.label.setMinimumSize(QtCore.QSize(500, 0))
-        # self.label.setText("")
-        # self.label.setObjectName("label")
-        # self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.inputBox.setStyleSheet("QLineEdit { background-color : white; }")
         self.svgWidget = QtSvg.QSvgWidget()
         self.horizontalLayout.addWidget(self.svgWidget)
@@ -77,5 +65,3 @@ class Ui_MainWindow(object):
         self.downloadButton.setText(_translate("MainWindow", "Save to"))
         self.toolBar.setWindowTitle(_translate("MainWindow", "toolBar"))
         self.inputBox.setPlaceholderText(_translate("MainWindow", "Input SQL-query here"))
-
-

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import re as reg
 import string
 import networkx as nx
@@ -390,21 +391,11 @@ def draw_graph(adjacency_list):
 
     g.add_nodes_from(adjacency_list.keys())
 
-    #color_map = []
-
     for k, v in adjacency_list.items():
         for i in v:
             if k != i:
                 u.edge(str(k), str(i))
 
-    # for node in g:
-    #     res = reg.match('N[0..9]*', node)
-    #     if res is not None:
-    #         u.get_node(node).attr['color'] = 'blue'
-    #     else:
-    #         u.get_node(node).attr['color'] = 'green'
-
-    #nx.set_node_attributes(g, color_map, 'node_color')
     u.attr(size='6,6')
     u.node_attr.update(style='filled', color='lightblue2')
 
